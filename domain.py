@@ -189,3 +189,63 @@ class Individual:
             # perform the crossover between the self and the otherParent 
         
         return offspring1, offspring2
+
+
+class Population():
+    def __init__(self, populationSize=10, individualSize=8, map=Map(), startx=0, starty=0):
+        # individualsize = number of moves m until the drone runs out
+        self.__map = map
+        self.__startx = startx
+        self.__starty = starty
+        self.__averageFitness = 0.0
+        self.__populationSize = populationSize
+        self.__v = [Individual(individualSize, self.__map, self.__startx, self.__starty) for x in range(populationSize)]
+        self.__fitness = []
+
+    def evaluate(self):
+        # evaluates the population
+        total = 0.0
+        for x in self.__v:
+            self.__fitness.append((x, x.fitness()))
+            total += x.fitness()
+
+        self.__averageFitness = total / self.__populationSize
+
+    def selection(self, k=0):
+        # 7/8 cel mai mare fitness, 1/8 random
+        # perform a selection of k individuals from the population
+        # and returns that selection
+        self.evaluate()
+        self.__fitness.sort(key=lambda x: x[1], reverse=True)
+        finalList = []
+        i = 0
+        for tuple in self.__fitness:
+            finalList.append(tuple[0])
+            i += 1
+            if i > (7 * k / 8):
+                break
+
+        for j in range(i, k):
+            position = randint(0, self.__populationSize - 1)
+            if self.__v[position] not in finalList:
+                finalList.append(self.__v[position])
+                j += 1
+
+        return finalList
+
+    def getIndividuals(self) -> List[Individual]:
+        return self.__v
+
+    def getSize(self):
+        return self.__populationSize
+
+    def setIndividuals(self, l: List[Individual]):
+        self.__v = l
+
+    def getAverage(self):
+        self.evaluate()
+        return self.__averageFitness
+
+    def getStandardDeviation(self):
+        self.evaluate()
+        return np.nanstd([i.fitness() for i in self.__v])
